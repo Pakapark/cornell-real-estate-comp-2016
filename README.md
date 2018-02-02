@@ -8,7 +8,7 @@ Input is ${ABCD}^{≤5}$ and there can be any space between each character of in
 
 ### Image
 
-!(alt text)[./rental-sample.png]
+![](./rental-sample.png)
 
 ### Environment
 
