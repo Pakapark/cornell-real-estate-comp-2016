@@ -91,11 +91,10 @@ def readPossibilities():
 '''
 def computeRentPSF(options):
     calc = OptionRent()
-    numYearCompute = 5 + sum(map(len, options))*5
-    if numYearCompute == 5:
-        return [[15.0 for year in xrange(5)] for _ in xrange(4)], [[1 for year in xrange(5)] for _ in xrange(4)]
-    result = [[calc.getRentByYear("D", year) for year in xrange(2016, 2016 + numYearCompute)] for _ in xrange(4)]
-    binaryMap = [[1 for _  in xrange(5)] + [0 for _ in xrange(numYearCompute - 5)] for _ in xrange(4)]
+    result = [[calc.getRentByYear("D", year) for year in xrange(2016, 2046)] for _ in xrange(4)]
+    binaryMap = [[1 for _  in xrange(5)] + [0.9 for _ in xrange(25)] for _ in xrange(4)]
+    if sum(map(len, options)) == 0:
+        return result, binaryMap
 
     index = 0
     for optionSet in options:
@@ -106,7 +105,6 @@ def computeRentPSF(options):
                 result[j][5+5*(index + i): 5+5*(index+1+i)] = [price]*5
                 binaryMap[j][5+5*(index + i): 5+5*(index+1+i)] = [1]*5
         index += len(optionSet)
-
 
     return result, binaryMap
 
@@ -128,4 +126,19 @@ def getRentRSF():
 
     return result, binaryMap
 
-getRentRSF()
+def getRentalIncome(RSF, occupancyRate):
+    totalNRA = {0: 145000, 1: 275000, 2: 240000, 3: 240000}
+    rentalIncome = [[0 for i in xrange(30)] for j in xrange(5)]
+    for i in xrange(len(RSF)):
+        for j in range(len(RSF[0])):
+            income = totalNRA[i]*RSF[i][j]*occupancyRate[i][j]
+            rentalIncome[i][j] = income
+            rentalIncome[-1][j] += income
+
+    return rentalIncome
+
+def getAllRentalIncome(allRSF, allOccupancyRate):
+    totalRentalIncome = {}
+    for k in allRSF:
+        totalRentalIncome[k] = getRentalIncome(allRSF[k], allOccupancyRate[k])
+    return totalRentalIncome

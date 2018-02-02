@@ -20,8 +20,14 @@
         <span class="col-sm-4"></span>
       </div>
     </div>
-    <div style="margin: 30px;">
-      <div id="output"></div>
+    <div style="margin:30px;">
+      <div id="RSF-output"></div>
+    </div>
+    <div style="margin:30px;">
+      <div id="occupancy-output"></div>
+    </div>
+    <div style="margin:30px;">
+      <div id="totalRentalIncome-output"></div>
     </div>
   </body>
   <script type="text/javascript">
@@ -29,19 +35,23 @@
     var input = document.getElementById("option-input");
     var data = JSON.parse({{ result|tojson|safe }});
     var binaryMap = JSON.parse({{ binaryMap|tojson|safe }});
+    var totalRental = JSON.parse({{ totalRental|tojson|safe }})
     submit.onclick = () => {
-      var outputDisplay = document.getElementById("output");
+      var RSFDisplay = document.getElementById("RSF-output");
+      var occupancyOutput = document.getElementById("occupancy-output");
+      var rentalOutput = document.getElementById("totalRentalIncome-output");
       var inputUpper = input.value.toUpperCase();
       if (!data.hasOwnProperty(inputUpper)) {
-        outputDisplay.innerHTML = '<p style="text-align:center">Invalid Input</p>';
+        RSFDisplay.innerHTML = '<p style="text-align:center">Invalid Input</p>';
+        occupancyOutput = "";
         return
       }
 
       // Get space position
       var temp = 0, numSpace = 0;
-      var spaces = [];
+      var spaces = [0];
       while(1){
-        temp = inputUpper.indexOf(' ', temp + 1)
+        temp = inputUpper.indexOf(' ', temp + 1);
         if (temp < 0) break;
         spaces.push(temp - numSpace);
         numSpace += 1;
@@ -49,41 +59,78 @@
 
       var output = data[inputUpper];
       var bm = binaryMap[inputUpper];
+      var totalRent = totalRental[inputUpper];
       var string = '<table class="table"><thead class="thead-default"><tr><th>floor\\year</th>';
+      var string2 = '<table class="table"><thead class="thead-default"><tr><th>floor\\year</th>';
+      var string3 = '<table class="table"><thead class="thead-default"><tr><th>floor\\year</th>';
       for (var i = 0; i < output[0].length; i++){
         string = string + "<th>" + (2016 + i).toString() + "</th>"
+        string2 = string2 + "<th>" + (2016 + i).toString() + "</th>"
+        string3 = string3 + "<th>" + (2016 + i).toString() + "</th>"
       }
       string = string + "</tr></thead><tbody>";
+      string2 = string2 + "</tr></thead><tbody>";
+      string3 = string3 + "</tr></thead><tbody>";
       for (var i = 0; i < output.length; i++){
         string = string + "<tr>";
+        string2 = string2 + "<tr>";
+        string3 = string3 + "<tr>";
         if (i == 0) {
           string = string + "<td><b>26-31</b></td>";
+          string2 = string2 + "<td><b>26-31</b></td>";
+          string3 = string3 + "<td><b>26-31</b></td>";
         } else if (i == 1) {
           string = string + "<td><b>15-25</b></td>";
+          string2 = string2 + "<td><b>15-25</b></td>";
+          string3 = string3 + "<td><b>15-25</b></td>";
         } else if (i == 2) {
           string = string + "<td><b>8-14</b></td>";
+          string2 = string2 + "<td><b>8-14</b></td>";
+          string3 = string3 + "<td><b>8-14</b></td>";
         } else if (i == 3){
           string = string + "<td><b>1-7</b></td>";
+          string2 = string2 + "<td><b>1-7</b></td>";
+          string3 = string3 + "<td><b>8-14</b></td>";
         }
         for (var j = 0; j < output[i].length; j++){
-          if (bm[i][j]){
+
+          if (bm[i][j] == 1){
             if (spaces.includes(parseInt(j/5)) && j % 5 == 4){
               string = string + '<td style="background-color: #d3d3d3; border-right: solid black 1px;">' + output[i][j].toFixed(2) + "</td>";
+              string2 = string2 + '<td style="background-color: #d3d3d3; border-right: solid black 1px;">100%</td>'
+              string3 = string3 + '<td style="background-color: #d3d3d3; border-right: solid black 1px;">' + totalRent[i][j].toFixed(2) + "</td>";
             } else {
               string = string + '<td style="background-color: #d3d3d3;">' + output[i][j].toFixed(2) + "</td>";
+              string2 = string2 + '<td style="background-color: #d3d3d3;">100%</td>';
+              string3 = string3 + '<td style="background-color: #d3d3d3;">' + totalRent[i][j].toFixed(2) + "</td>";
             }
           } else {
             if (spaces.includes(parseInt(j/5)) && j % 5 == 4){
               string = string + '<td style="border-right: solid black 1px;">' + output[i][j].toFixed(2) + "</td>";
+              string2 = string2 + '<td style="border-right: solid black 1px;">90%</td>';
+              string3 = string3 + '<td style="border-right: solid black 1px;">' + totalRent[i][j].toFixed(2) + "</td>";
             } else {
               string = string + '<td>' + output[i][j].toFixed(2) + "</td>";
+              string2 = string2 + '<td>90%</td>'
+              string3 = string3 + '<td>' + totalRent[i][j].toFixed(2) + "</td>";
             }
           }
         }
         string = string + "</tr>";
+        string2 = string2 + "</tr>";
+        string3 = string3 + "</tr>";
+      }
+
+      string3 = string3 + '</tr><td style="border-top: solid 1px black; border-bottom: double 1px black;"><b>Total</b></td>'
+      for (var j = 0; j < output[0].length; j++){
+        string3 = string3 + '<td style="border-top: solid 1px black; border-bottom: double 1px black;">' + totalRent[4][j].toFixed(2) + "</td>";
       }
       string = string + "</tbody></table>";
-      outputDisplay.innerHTML = string;
+      string2 = string2 + "</tbody></table>";
+      string3 = string3 + "</tr></tbody></table>";
+      RSFDisplay.innerHTML = string;
+      occupancyOutput.innerHTML = string2;
+      rentalOutput.innerHTML = string3;
     }
 
     input.onkeyup = (e) => {
